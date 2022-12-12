@@ -1,5 +1,5 @@
 .user-container {
-  width: 100%;
+  width: 97%;
   background-image: linear-gradient(#31324F, #1F202E);
   margin-top: 1px;
   align-items: center;
@@ -27,6 +27,7 @@
   font-size: 1.2rem;  /* VERIFICAR CALC (10PX + 1VMIN*/
   color: #E2E2E2;
 }
+
 button {
   padding: 4px 7px;
   font-size: .8rem;
@@ -53,6 +54,7 @@ justify-content: space-between;
 align-items: center;
 border: 1px solid black;
 }
+
 
 .modal span{
 background-color: #474971;
@@ -85,6 +87,18 @@ flex-direction: column;
 width: 100%;
 align-items: center;
 justify-content: center;
+}
+
+.input-button{
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.input-button button{
+    margin: 5px;
 }
 
 .input-money p{

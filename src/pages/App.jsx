@@ -2,14 +2,19 @@ import './App.css'
 import { useEffect, useState } from 'react'
 import NumberFormat from 'react-number-format';
 import api from './api';
+import axios from 'axios';
+
 
 function UserList(){
-    let [tarefas, setTarefas] = useState([])
+    let [usuarios, setusuarios] = useState([])
+
     useEffect(() => {
         api.get('5d531c4f2e0000620081ddce', {          
             method: 'GET',
         })
-        .then((resp) => {setTarefas(resp.data)})
+        .then((resp) => {
+            setusuarios(resp.data)
+        })
     }, [])
 
     // lista dos cartoes
@@ -34,18 +39,23 @@ function UserList(){
     }
 
     // Constante de ação dos modals
-    let [pagamento, setpagamento] = useState("none"); // abrir pagamento
+//    let [pagamento, setpagamento] = useState([]); // abrir pagamento
     let [pagadorNome, setpagadorNome] = useState(""); //  pegar nome usuário
+    let [pagadorId, setpagadorId] = useState(""); //  pegar nome usuário
     let [resultado, setresultado] = useState("none"); // abrir recebimento
     let [pagamentoError, setpagamentoError] = useState(""); // mostrar o não do recebimento
     let [valorCartao, setvalorCartao] = useState("1"); // valor do selection
     let [valorDinheiro, setvalorDinheiro] = useState(""); // valor do dinheiro
     let [obrigatorio, setobrigatorio] = useState("none"); // validação de campo
+    let [liberabotao, setliberabotao]= useState(false);
 
     // Abrir o modal
-    function modalPayOpen (name){
-        setpagamento("flex")
-        setpagadorNome(name)
+    function modalPayOpen (e){
+        //setpagamento("flex")
+        setpagadorNome(e.name)
+        setpagadorId(e.id)
+        //setpagamento(e)
+        setliberabotao(true)
     }
 
     // Função para dinheiro
@@ -55,17 +65,35 @@ function UserList(){
     }
 
     // Modal recibo de pagamento
-    function modalresultOpen (){
+    function modalresultOpen(cartao, valor, id){
         if (valorDinheiro === ""){
             setobrigatorio("flex");
         }
         else{
+			let payload = {
+				"card_number": cards[cartao-1].card_number,
+				"cvv": cards[cartao-1].cvv,
+				"expiry_date": cards[cartao-1].expiry_date,
+				// Destination User ID
+				"destination_user_id": id,
+				// Value of the Transaction
+				"value": valor
+			}
+			console.log("payload ", payload);
+			
+			axios.post(`https://run.mocky.io/v3/533cd5d7-63d3-4488-bf8d-4bb8c751c989`, { payload })
+				.then(res => {
+					console.log(res);
+					console.log(res.data);
+                })
+            
             if (valorCartao === "1"){
                 setpagamentoError("");
             } else{
                 setpagamentoError("não");
             }
-            setpagamento("none");
+
+            //setpagamento("none");
             setresultado("flex");
             setvalorDinheiro("");
             setobrigatorio("none");
@@ -76,51 +104,71 @@ function UserList(){
     // Fechamento do modal
    function modalClose (){
         setresultado("none");
+        setliberabotao(false); 
+        setpagadorNome("");       
     }
 
-   // function modalClosePag (){
-   //     setpagamento("none");
-   // }
+    function modalClosePag (){
+        setvalorDinheiro("");
+        setobrigatorio("none");        
+        //setpagamento("none");
+        setpagadorNome("");
+        setliberabotao(false);
+    }
 
    // Retornando o conteúdo que será renderizado em tela
    // Função map percorrendo todo o array recuperado anteriormente com o axios e listando na tela cada linha do array
     return(
         <>
-        {tarefas.map((t, index) =>{
+        {usuarios.map((t, index) =>{
             return (
-            <div className="user-container" key={'user'+index}>
+              <div className="user-container" key={'user'+index}>
                 <div className="user-wrapper">
                     <img className="user-thumbnail" src={t.img} alt=""/>
                     <div className="user-data">
-                        <p>Nome do Usuário {t.name}</p>
+                        <p>Nome do Usuário: {t.name}</p>
                         <p>ID: {t.id} - Username: {t.username}</p>
                     </div>
-                    <button onClick={()=>{modalPayOpen(t.name)}}>Pagar</button>
+                    <button type="submit" onClick={()=>{modalPayOpen(t)}} disabled={liberabotao}>Pagar</button>
                 </div>
             </div>
             )
         })}
          {/* ----------------Modal para o pagamento------------ */}
-         <div className="modal" style={{display: pagamento}}>
+         { pagadorNome &&
+         <div className="modal">
                 <span>Pagamento para <b>{pagadorNome}</b></span>
                 <div className="input-money">
-                    <NumberFormat thousandSeparator={true} value={valorDinheiro} onChange={inputChange} prefix={'R$ '} inputmode="numeric" placeholder="R$ 0,00"/>
+                    <NumberFormat 
+                            thousandSeparator="." 
+                            decimalSeparator="," 
+                            decimalScale={2}
+                            fixedDecimalScale 
+                            value={valorDinheiro} 
+                            onChange={inputChange} 
+                            prefix={'R$ '} 
+                            inputmode="numeric" 
+                            placeholder="R$ 0,00"
+                            />
                     <p style={{display:obrigatorio}}>Campo obrigatório</p>
                 </div>
                 <select value={valorCartao} onChange={handleChange}>
                     <option value="1">Cartão com final {cards[0].card_number.substr(-4)}</option>
                     <option value="2">Cartão com final {cards[1].card_number.substr(-4)}</option>
                 </select>
-                <button onClick={()=>{modalresultOpen ()}}>Pagar</button>
-                {/*<button onClick={()=>{modalClosePag()}}>Fechar</button> */}               
+                <div className="input-button">
+                   <button onClick={()=>{modalresultOpen(valorCartao, valorDinheiro, pagadorId)}}>Pagar</button>
+                   <button onClick={()=>{modalClosePag()}}>Fechar</button>
+                </div>
             </div>
-
+            }
             {/* -------------Modal de recibo de pagamento------------ */}
             <div className="modal" style={{display: resultado}}>
                 <span>Recibo de pagamento</span>
                 <p>O Pagamento <strong>{pagamentoError}</strong> foi concluido com sucesso</p>
                 <button onClick={()=>{modalClose()}}>Fechar</button>
             </div>
+            
       </>
     )
 }
