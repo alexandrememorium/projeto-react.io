@@ -1,21 +1,27 @@
 import './App.css'
 import { useEffect, useState } from 'react'
 import NumberFormat from 'react-number-format';
+import loading from '../img/loading.svg';
 import api from './api';
 import axios from 'axios';
+
 
 
 function UserList(){
     let [usuarios, setusuarios] = useState([])
 
+    
     useEffect(() => {
+        setTimeout(() => { 
         api.get('5d531c4f2e0000620081ddce', {          
             method: 'GET',
         })
         .then((resp) => {
+            setcarregamento("none")
             setusuarios(resp.data)
         })
-    }, [])
+    },100)
+ }, [])
 
     // lista dos cartoes
     let cards = [
@@ -41,8 +47,9 @@ function UserList(){
     // Constante de ação dos modals
 //    let [pagamento, setpagamento] = useState([]); // abrir pagamento
     let [pagadorNome, setpagadorNome] = useState(""); //  pegar nome usuário
-    let [pagadorId, setpagadorId] = useState(""); //  pegar nome usuário
+    let [pagadorId, setpagadorId] = useState(""); //  pegar id usuário
     let [resultado, setresultado] = useState("none"); // abrir recebimento
+    let [carregamento, setcarregamento] = useState("flex"); // abrir carregamento
     let [pagamentoError, setpagamentoError] = useState(""); // mostrar o não do recebimento
     let [valorCartao, setvalorCartao] = useState("1"); // valor do selection
     let [valorDinheiro, setvalorDinheiro] = useState(""); // valor do dinheiro
@@ -106,6 +113,7 @@ function UserList(){
         setresultado("none");
         setliberabotao(false); 
         setpagadorNome("");       
+        setpagadorId("");
     }
 
     function modalClosePag (){
@@ -113,6 +121,7 @@ function UserList(){
         setobrigatorio("none");        
         //setpagamento("none");
         setpagadorNome("");
+        setpagadorId("");        
         setliberabotao(false);
     }
 
@@ -168,7 +177,12 @@ function UserList(){
                 <p>O Pagamento <strong>{pagamentoError}</strong> foi concluido com sucesso</p>
                 <button onClick={()=>{modalClose()}}>Fechar</button>
             </div>
-            
+            {/* -------------Modal de CARREGAMENTO------------ */}
+            <div className="modal" style={{display: carregamento}}>
+                <span>Carregando .......</span>
+                <img src={loading} alt="Loading" width="20%"></img>
+                <p> <strong>Aguarde Sistema Carregando....</strong></p>
+            </div>            
       </>
     )
 }
